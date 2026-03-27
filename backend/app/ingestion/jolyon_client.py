@@ -98,9 +98,9 @@ class JolyonClient:
         self.base_url = (base_url or settings.jolyon_api_base_url).rstrip("/")
 
     async def _get(self, path: str) -> Any:
-        url = f"{self.base_url}{path}"
+        url = f"{self.base_url}{path}.json"
         try:
-            async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT, follow_redirects=True) as client:
                 response = await client.get(url)
                 response.raise_for_status()
                 return response.json()
