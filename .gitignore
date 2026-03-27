@@ -1,0 +1,16 @@
+.superpowers/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.env
+
+# IDE
+.vscode/
+.idea/
