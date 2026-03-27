@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # Scheduler settings
     scheduler_enabled: bool = True
-    data_fetch_delay_minutes: int = 30  # delay after session end before fetching data
+    data_fetch_delay_minutes: int = 30
     max_retries: int = 3
 
     model_config = {"env_file": ".env"}
