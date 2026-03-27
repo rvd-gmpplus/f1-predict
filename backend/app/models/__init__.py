@@ -7,6 +7,7 @@ from app.models.prediction import (
     MLPrediction,
     UserScore,
 )
+from app.models.training_data import SessionData, DriverSessionStats, HistoricalFeature
 
 __all__ = [
     "User",
@@ -18,4 +19,7 @@ __all__ = [
     "ActualResult",
     "MLPrediction",
     "UserScore",
+    "SessionData",
+    "DriverSessionStats",
+    "HistoricalFeature",
 ]
