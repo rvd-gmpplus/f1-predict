@@ -1,6 +1,7 @@
 from app.services.scoring import score_position_based
 from app.services.scoring import score_fastest_lap, score_constructor, score_pitstop
 from app.services.scoring import score_teammate_battles, score_safety_car, score_dnf, score_tire_strategy
+from app.services.score_calculator import calculate_user_race_score
 
 
 class TestPositionBasedScoring:
@@ -124,3 +125,23 @@ class TestSpecialCategoryScoring:
     def test_tire_strategy_wrong(self):
         result = score_tire_strategy(1, 2)
         assert result["total"] == 0
+
+
+class TestScoreCalculator:
+    def test_calculate_user_race_score(self):
+        prediction_details = [
+            {"category": "qualifying_top5", "position": 1, "driver_id": 10},
+            {"category": "qualifying_top5", "position": 2, "driver_id": 20},
+            {"category": "qualifying_top5", "position": 3, "driver_id": 30},
+            {"category": "qualifying_top5", "position": 4, "driver_id": 40},
+            {"category": "qualifying_top5", "position": 5, "driver_id": 50},
+            {"category": "fastest_lap", "driver_id": 10, "team_id": 1},
+        ]
+        actual_results = {
+            "qualifying_top5": [10, 20, 30, 40, 50],
+            "fastest_lap": {"driver_id": 10, "team_id": 1},
+        }
+        scores = calculate_user_race_score(prediction_details, actual_results, is_sprint_weekend=False)
+        assert scores["qualifying_top5"]["total"] == 135
+        assert scores["fastest_lap"]["total"] == 30
+        assert scores["grand_total"] == 165
