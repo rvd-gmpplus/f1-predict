@@ -90,16 +90,30 @@ def trigger_seed_teams_drivers(db: Session = Depends(get_db)):
 
 
 @router.post("/trigger-pipeline/{race_id}/{stage}")
-def trigger_pipeline(race_id: int, stage: str):
-    """Manually trigger the ML prediction pipeline for a specific race and stage."""
+def trigger_pipeline(race_id: int, stage: str, db: Session = Depends(get_db)):
+    """Manually trigger prediction generation for a specific race and stage.
+    Uses statistical predictor as primary method (reliable), falls back to ML pipeline."""
     valid_stages = ["pre", "fp1", "fp2", "fp3", "quali"]
     if stage not in valid_stages:
         raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
 
-    result = trigger_manual_pipeline(race_id, stage)
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    return result
+    from app.ml.statistical_predictor import generate_statistical_predictions
+    count = generate_statistical_predictions(db, race_id, stage)
+    return {"success": True, "predictions_generated": count, "method": "statistical"}
+
+
+@router.post("/generate-all-predictions")
+def generate_all_upcoming_predictions(db: Session = Depends(get_db)):
+    """Generate predictions for all upcoming races."""
+    from app.ml.statistical_predictor import generate_statistical_predictions
+    races = db.query(RaceWeekend).filter(RaceWeekend.status == "upcoming").all()
+    total = 0
+    results = []
+    for race in races:
+        count = generate_statistical_predictions(db, race.id, "pre")
+        total += count
+        results.append({"race": race.name, "predictions": count})
+    return {"total_predictions": total, "races": results}
 
 
 @router.post("/train-models")
