@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -6,6 +8,9 @@ from app.models.f1 import RaceWeekend
 from app.models.prediction import UserPrediction, ActualResult, UserScore
 from app.models.user import User
 from app.services.score_calculator import calculate_user_race_score
+from app.services.seeder import run_full_seed, seed_teams_and_drivers
+from app.scheduler.jobs import trigger_manual_pipeline
+from app.ml.training import train_all_models
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -54,6 +59,57 @@ def trigger_scoring(race_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"scored": len(scored_users), "users": scored_users}
+
+
+@router.post("/seed")
+def trigger_full_seed(db: Session = Depends(get_db)):
+    """Trigger full database seed: teams, drivers, schedules, historical data."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(run_full_seed(db))
+        return {"status": "Seed completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Seed failed: {str(e)}")
+    finally:
+        loop.close()
+
+
+@router.post("/seed/teams-drivers")
+def trigger_seed_teams_drivers(db: Session = Depends(get_db)):
+    """Seed only teams and drivers (fast, no external API calls for data)."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        team_map = loop.run_until_complete(seed_teams_and_drivers(db))
+        return {"status": "ok", "teams_seeded": len(team_map)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Seed failed: {str(e)}")
+    finally:
+        loop.close()
+
+
+@router.post("/trigger-pipeline/{race_id}/{stage}")
+def trigger_pipeline(race_id: int, stage: str):
+    """Manually trigger the ML prediction pipeline for a specific race and stage."""
+    valid_stages = ["pre", "fp1", "fp2", "fp3", "quali"]
+    if stage not in valid_stages:
+        raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
+
+    result = trigger_manual_pipeline(race_id, stage)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@router.post("/train-models")
+def trigger_model_training(stage: str = "pre", db: Session = Depends(get_db)):
+    """Train all ML models from historical data."""
+    valid_stages = ["pre", "fp1", "fp2", "fp3", "quali"]
+    if stage not in valid_stages:
+        raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
+    results = train_all_models(db, stage)
+    return {"status": "Training complete", "models_trained": results}
 
 
 def _build_actual_results(results_rows: list) -> dict:
