@@ -62,6 +62,7 @@ export interface MLPrediction {
   position: number | null;
   driver_id: number | null;
   team_id: number | null;
+  value: string | null;
   confidence: number;
   session_stage: SessionStage;
   generated_at: string;

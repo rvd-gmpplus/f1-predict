@@ -40,7 +40,7 @@ export default function AIInsightsPage() {
     : [];
 
   const latestStage = ["quali", "fp3", "fp2", "fp1", "pre"].find((s) =>
-    availableStages.includes(s as PredictionCategory),
+    availableStages.includes(s as "pre" | "fp1" | "fp2" | "fp3" | "quali"),
   );
 
   const selectedRace = allRaces?.find((r) => r.id === raceId);
@@ -164,7 +164,7 @@ export default function AIInsightsPage() {
                               </span>
                             )}
                             <span>
-                              {driver?.code ?? team?.short_name ?? pred.value ?? "N/A"}
+                              {driver?.code ?? team?.short_name ?? "N/A"}
                             </span>
                           </div>
                           <div className="w-20 bg-f1-surface rounded-full h-1.5">
