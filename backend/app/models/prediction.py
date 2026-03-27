@@ -64,6 +64,7 @@ class MLPrediction(Base):
     position: Mapped[int | None] = mapped_column(Integer)
     driver_id: Mapped[int | None] = mapped_column(ForeignKey("drivers.id"))
     team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"))
+    value: Mapped[str | None] = mapped_column(String(100))
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     model_version: Mapped[str] = mapped_column(String(50))
     session_stage: Mapped[str] = mapped_column(String(10))
