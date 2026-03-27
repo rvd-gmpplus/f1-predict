@@ -1,9 +1,0 @@
-pyproject.toml
-app/__init__.py
-app/config.py
-app/main.py
-f1_predict_backend.egg-info/PKG-INFO
-f1_predict_backend.egg-info/SOURCES.txt
-f1_predict_backend.egg-info/dependency_links.txt
-f1_predict_backend.egg-info/requires.txt
-f1_predict_backend.egg-info/top_level.txt
